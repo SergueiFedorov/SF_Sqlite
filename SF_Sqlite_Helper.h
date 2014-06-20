@@ -195,7 +195,7 @@ void sf_sqlite_buildInsertValues(std::string& output, const std::vector<std::str
 void sf_sqlite_buildInsertValues(std::string& ouput, const std::vector<SF_Sqlite_Column_Data_Pair>& values)
 {
 	std::string nameString = "(";
-	std::string columnString = SF_SQLITE_QUERY_STRINGS::INSERT_INTO + "(";
+	std::string columnString = SF_SQLITE_QUERY_STRINGS::VALUES + "(";
 
 	sf_sqlite_buildColumnDataPairStrings(nameString, columnString, values);
 
