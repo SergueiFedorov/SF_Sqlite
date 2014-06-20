@@ -65,7 +65,7 @@ namespace SF_COLUMN_TYPES
 struct SF_Sqlite_Parameter
 {
 	SF_Sqlite_Parameter() { }
-	SF_Sqlite_Parameter(int param, std::string paramData)
+	SF_Sqlite_Parameter(int& param, std::string& paramData)
 		: paramNum(param), data(paramData)
 	{
 
@@ -82,7 +82,7 @@ struct SF_Sqlite_Column_Type_Pair
 	int columnFlags;
 
 	SF_Sqlite_Column_Type_Pair() { }
-	SF_Sqlite_Column_Type_Pair(const std::string column, const std::string type, const int flags = SF_COLUMN_FLAGS::FLAG::NONE)
+	SF_Sqlite_Column_Type_Pair(const std::string& column, const std::string& type, const int flags = SF_COLUMN_FLAGS::FLAG::NONE)
 		: columnName(column), columnType(type), columnFlags(flags)
 	{
 
@@ -95,7 +95,14 @@ struct SF_Sqlite_Column_Data_Pair
 	std::string columnData;
 
 	SF_Sqlite_Column_Data_Pair() { }
-	SF_Sqlite_Column_Data_Pair(const std::string column, const std::string data)
+    
+    SF_Sqlite_Column_Data_Pair(const std::string& column, const bool& data)
+        : columnName(column), columnData(std::string(1, '0' + (data == true ? (char)1 : (char)0) ))
+    {
+        
+    }
+    
+	SF_Sqlite_Column_Data_Pair(const std::string& column, const std::string& data)
 		: columnName(column), columnData(data)
 	{
 

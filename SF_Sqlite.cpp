@@ -48,7 +48,7 @@ static const SF_CODES::ERRORS executeScalar(sqlite3* connection, const std::stri
 	execution.type = EXECUTION_TYPE::SCALAR;
 	execution.pointer = &holder;
 
-	char* error;
+	char* error = 0;
 	sqlite3_exec(connection, query.c_str(), callback, &execution, &error);
 	*result = execution.pointer;
 
@@ -147,7 +147,7 @@ const SF_CODES::ERRORS SF_Sqlite::execute(const std::string& query, std::list<SF
 	execution.type = EXECUTION_TYPE::ROWS;
 	execution.pointer = (char*)&result;
 
-    char* error;
+    char* error = 0;
 	int nativeError = sqlite3_exec(this->connection, query.c_str(), callback, &execution, &error);
 
 	SF_SQLITE_PRINT_QUERY(query);
@@ -172,7 +172,7 @@ const SF_CODES::ERRORS SF_Sqlite::execute(const std::string& query) const
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
-	char* error;
+	char* error = 0;
 	int nativeError = sqlite3_exec(this->connection, query.c_str(), 0, 0, &error);
 
 	SF_SQLITE_PRINT_QUERY(query);
@@ -184,7 +184,7 @@ const SF_CODES::ERRORS SF_Sqlite::execute(const std::string& query) const
 
 const SF_CODES::ERRORS SF_Sqlite::executeScalar(const std::string& query, int& result) const
 {
-	char* resultReturn;
+	char* resultReturn = 0;
 	SF_CODES::ERRORS error = INTERNAL::executeScalar(this->connection, query, &resultReturn);
 	result = (int)*resultReturn - '0';
 	return error;
@@ -192,7 +192,7 @@ const SF_CODES::ERRORS SF_Sqlite::executeScalar(const std::string& query, int& r
 
 const SF_CODES::ERRORS SF_Sqlite::executeScalar(const std::string& query, char& result) const
 {
-	char* resultReturn;
+	char* resultReturn = 0;
 	SF_CODES::ERRORS error = INTERNAL::executeScalar(this->connection, query, &resultReturn);
 	result = (char)*resultReturn;
 	return error;
