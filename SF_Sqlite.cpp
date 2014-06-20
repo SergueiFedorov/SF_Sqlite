@@ -1,6 +1,69 @@
 #include "SF_Sqlite.h"
 #include "SF_Sqlite_Helper.h"
 
+enum EXECUTION_TYPE { ROWS, ROWS_COUNT, SCALAR };
+
+//Used in communication to the call back.
+//Pointer points to usable data storage
+struct Execution_Package
+{
+	EXECUTION_TYPE type;
+	char* pointer;
+	int resultCount;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Forward Declarations///////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+static int callback(void *data, int argc, char **argv, char **ColumnNames);
+
+namespace INTERNAL
+{
+
+static const SF_CODES::ERROR executeScalar(sqlite3* connection, const std::string& query, char** result);
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Internal Use Only//////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Internal functions
+//Hides implementation. Instead of exposing it as private or using the pimpl idiom, I just use
+//a namespace with static functions. 
+//NOTE: This breaks polymorphism but this class is not supposed be inherited. Use aggregation instead.
+
+namespace INTERNAL
+{
+
+static const SF_CODES::ERROR executeScalar(sqlite3* connection, const std::string& query, char** result) 
+{
+	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
+
+	//This is OK, but hacky. Too much forward dependence on how the call back works
+	char holder;
+
+	//Package to send to the callback
+	Execution_Package execution;
+	execution.type = EXECUTION_TYPE::SCALAR;
+	execution.pointer = &holder;
+
+	char* error;
+	sqlite3_exec(connection, query.c_str(), callback, &execution, &error);
+	*result = execution.pointer;
+
+	SF_SQLITE_PRINT_QUERY(query);
+	SF_SQLITE_PRINT_QUERY_ERROR(error);
+
+	return SF_CODES::ERROR::NO_ERROR;
+}
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Main Implementation////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //This will not open connection as it is too risky that it may
 //cause issues in the constructor. Never run code which can
 //throw exeptions or cause errors in the constructors
@@ -10,8 +73,6 @@ SF_Sqlite::SF_Sqlite( const std::string & name)
 
 }
 
-//Opens a connection to the database file specified through the constructor
-//RETURNS: returns ALREADY_CONNECTED if a connection is already open. Otherwise returns NO_ERROR
 const SF_CODES::ERROR SF_Sqlite::connect()
 {
 	SF_SQLITE_IS_CONNECTED_ESCAPE(connection);
@@ -32,19 +93,34 @@ const SF_CODES::ERROR SF_Sqlite::disconnect()
 
 static int callback(void *data, int argc, char **argv, char **ColumnNames)
 {
-	std::list<SF_Sqlite_Row>* rows = (std::list<SF_Sqlite_Row>*)data;
+	Execution_Package* package = (Execution_Package*)data;
+	package->resultCount = argc;
 
-	SF_Sqlite_Row row;
-	for (int x = 0; x < argc; ++x)
+	if (argc == 0)
 	{
-		SF_Sqlite_Cell cell;
-		cell.columnName = ColumnNames[x];
-		cell.data = argv[x];
-
-		row.columns.push_back(cell);
+		return 0;
 	}
 
-	rows->push_back(row);
+	if (package->type == EXECUTION_TYPE::ROWS)
+	{
+		std::list<SF_Sqlite_Row>* rows = (std::list<SF_Sqlite_Row>*)package->pointer;
+
+		SF_Sqlite_Row row;
+		for (int x = 0; x < argc; ++x)
+		{
+			SF_Sqlite_Cell cell;
+			cell.columnName = ColumnNames[x];
+			cell.data = argv[x];
+
+			row.columns.push_back(cell);
+		}
+
+		rows->push_back(row);
+	}
+	else
+	{
+		*package->pointer = **argv;
+	}
 
 	return 0;
 }
@@ -53,9 +129,15 @@ const SF_CODES::ERROR SF_Sqlite::execute(const std::string& query, std::list<SF_
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
-	char* error;
-	sqlite3_exec(this->connection, query.c_str(), callback, &result, &error);
+	//Package to send to the callback
+	Execution_Package execution;
+	execution.type = EXECUTION_TYPE::ROWS;
+	execution.pointer = (char*)&result;
 
+	char* error;
+	sqlite3_exec(this->connection, query.c_str(), callback, &execution, &error);
+
+	SF_SQLITE_PRINT_QUERY(query);
 	SF_SQLITE_PRINT_QUERY_ERROR(error);
 
 	return SF_CODES::ERROR::NO_ERROR;
@@ -80,9 +162,42 @@ const SF_CODES::ERROR SF_Sqlite::execute(const std::string& query) const
 	char* error;
 	sqlite3_exec(this->connection, query.c_str(), 0, 0, &error);
 
+	SF_SQLITE_PRINT_QUERY(query);
 	SF_SQLITE_PRINT_QUERY_ERROR(error);
 
 	return SF_CODES::ERROR::NO_ERROR;
+}
+
+
+const SF_CODES::ERROR SF_Sqlite::executeScalar(const std::string& query, int& result) const
+{
+	char* resultReturn;
+	SF_CODES::ERROR error = INTERNAL::executeScalar(this->connection, query, &resultReturn);
+	result = (int)*resultReturn;
+	return error;
+}
+
+const SF_CODES::ERROR SF_Sqlite::executeScalar(const std::string& query, char& result) const
+{
+	char* resultReturn;
+	SF_CODES::ERROR error = INTERNAL::executeScalar(this->connection, query, &resultReturn);
+	result = (char)*resultReturn;
+	return error;
+}
+
+const SF_CODES::ERROR SF_Sqlite::executeCount(const std::string& query, int& result)
+{
+	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
+
+	std::list<SF_Sqlite_Row> returnResults;
+	SF_CODES::ERROR error = this->execute(query, returnResults);
+
+	if (SF_SQLITE_SUCCESS(error))
+	{
+		result = returnResults.size();
+	}
+
+	return error;
 }
 
 const SF_CODES::ERROR SF_Sqlite::insertRecord(const std::string& table, const std::vector<std::string>& values) const
@@ -98,6 +213,8 @@ const SF_CODES::ERROR SF_Sqlite::insertRecord(const std::string& table, const st
 	std::string query;
 	query += insertIntoString;
 	query += insertValuesString;
+
+	SF_SQLITE_PRINT_QUERY(query);
 
 	return this->execute(query);
 }
@@ -158,7 +275,6 @@ const SF_CODES::ERROR SF_Sqlite::getRecords(const std::string& table,
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
-
 	std::string whereListString;
 	sf_sqlite_buildWhereColumnList(whereListString, whereValues);
 
@@ -197,6 +313,21 @@ const SF_CODES::ERROR SF_Sqlite::createTable(const std::string& name,
 	query += columnString;
 
 	return this->execute(query);
+}
+
+const SF_CODES::ERROR SF_Sqlite::tableExists(const std::string& table, SF_Bool& result) const
+{
+	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
+
+	int returnValue;
+	SF_CODES::ERROR error = this->executeScalar("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='" + table + "';", returnValue);
+	
+	if (SF_SQLITE_SUCCESS(error))
+	{
+		result = returnValue > 0;
+	}
+
+	return error;
 }
 
 SF_Sqlite::~SF_Sqlite()
