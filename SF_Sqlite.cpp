@@ -186,7 +186,7 @@ const SF_CODES::ERRORS SF_Sqlite::executeScalar(const std::string& query, int& r
 {
 	char* resultReturn;
 	SF_CODES::ERRORS error = INTERNAL::executeScalar(this->connection, query, &resultReturn);
-	result = (int)*resultReturn;
+	result = (int)*resultReturn - '0';
 	return error;
 }
 

@@ -252,7 +252,7 @@ void sf_sqlite_buildParamedQuery(std::string& output, const std::string& paramed
 		printf("SQLITE QUERY: %s \n", QUERY.c_str());\
 
 #define SF_SQLITE_PRINT_QUERY_ERROR(ERROR_C_STRING) \
-	if (ERROR_C_STRING) printf("SQLITE ERROR: %s \n", ERROR_C_STRING); return SF_CODES::ERRORS::QUERY_FAIL; \
+	if (ERROR_C_STRING) { printf("SQLITE ERROR: %s \n", ERROR_C_STRING); return SF_CODES::ERRORS::QUERY_FAIL; }\
 
 #define SF_SQLITE_SUCCESS(ERROR_CODE) \
 		ERROR_CODE == SF_CODES::ERRORS::NO_ERROR
