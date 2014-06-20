@@ -10,6 +10,8 @@
 #include <vector>
 #include <assert.h>
 
+
+
 void sf_sqlite_buildColumnType(std::string& output, const std::string& column, const std::string& type);
 void sf_sqlite_buildColumnDataPairStrings(std::string& nameOutput, std::string& columnOutput, const std::vector<SF_Sqlite_Column_Data_Pair>& values);
 void sf_sqlite_buildCommaList(std::string& output, const std::vector<std::string> values);
@@ -217,7 +219,7 @@ void sf_sqlite_buildParamedQuery(std::string& output, const std::string& paramed
 		parameterIDStringed += std::to_string(paramterID);
 		parameterIDStringed += "}";
 
-		int paramPosition = output.find(parameterIDStringed);
+		size_t paramPosition = output.find(parameterIDStringed);
 
 		if (paramPosition != -1)
 		{
@@ -226,29 +228,34 @@ void sf_sqlite_buildParamedQuery(std::string& output, const std::string& paramed
 	}
 }
 
+
 #define SF_SQLITE_WRITE_ERROR(ERROR_TEXT) \
 		printf("SQLITE ERROR: %s \n", ERROR_TEXT); \
 
 #define SF_SQLITE_IS_CONNECTED_ESCAPE(X) \
-		if(X != 0) { SF_SQLITE_WRITE_ERROR("Connection Is Open"); return SF_CODES::ERROR::ALREADY_CONNECTED; } 
+		if(X != 0) { SF_SQLITE_WRITE_ERROR("Connection Is Open"); return SF_CODES::ERRORS::ALREADY_CONNECTED; }
 
 #define SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(X) \
-		if(X == 0) { SF_SQLITE_WRITE_ERROR("Connection Is Closed"); return SF_CODES::ERROR::NOT_CONNECTED; } 
+		if(X == 0) { SF_SQLITE_WRITE_ERROR("Connection Is Closed"); return SF_CODES::ERRORS::NOT_CONNECTED; }
 
 #define SF_SQLITE_RETURN_QUERY_ERROR(ERROR_C_STRING) \
-		if (ERROR_C_STRING) { return SF_CODES::ERROR::QUERY_FAIL; } \
+		if (ERROR_C_STRING) { return SF_CODES::ERRORS::QUERY_FAIL; } \
 		else { return SF_CODES::ERROR::NO_ERROR; }
-	
+
+#define SF_SQLITE_PROCESS_SQLITE_NATIVE_ERROR(ERROR) \
+        (SF_CODES::ERRORS) ERROR;
+
+
 #if DEBUG_SQLITE
 
 #define SF_SQLITE_PRINT_QUERY(QUERY) \
 		printf("SQLITE QUERY: %s \n", QUERY.c_str());\
 
 #define SF_SQLITE_PRINT_QUERY_ERROR(ERROR_C_STRING) \
-	if (ERROR_C_STRING) printf("SQLITE ERROR: %s \n", ERROR_C_STRING); return SF_CODES::ERROR::QUERY_FAIL; \
+	if (ERROR_C_STRING) printf("SQLITE ERROR: %s \n", ERROR_C_STRING); return SF_CODES::ERRORS::QUERY_FAIL; \
 
 #define SF_SQLITE_SUCCESS(ERROR_CODE) \
-		ERROR_CODE == SF_CODES::ERROR::NO_ERROR
+		ERROR_CODE == SF_CODES::ERRORS::NO_ERROR
 
 #define SF_SQLITE_UNUSED(X)
 
