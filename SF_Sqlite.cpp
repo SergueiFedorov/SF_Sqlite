@@ -20,7 +20,7 @@ static int callback(void *data, int argc, char **argv, char **ColumnNames);
 namespace INTERNAL
 {
 
-static const SF_CODES::ERRORS executeScalar(sqlite3* connection, const std::string& query, char** result);
+static const SF_SQLITE_CODES::ERRORS executeScalar(sqlite3* connection, const std::string& query, char** result);
 
 }
 
@@ -36,7 +36,7 @@ static const SF_CODES::ERRORS executeScalar(sqlite3* connection, const std::stri
 namespace INTERNAL
 {
 
-static const SF_CODES::ERRORS executeScalar(sqlite3* connection, const std::string& query, char** result)
+static const SF_SQLITE_CODES::ERRORS executeScalar(sqlite3* connection, const std::string& query, char** result)
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
@@ -56,7 +56,7 @@ static const SF_CODES::ERRORS executeScalar(sqlite3* connection, const std::stri
 	SF_SQLITE_PRINT_QUERY(query);
 	SF_SQLITE_PRINT_QUERY_ERROR(error);
 
-	return SF_CODES::ERRORS::NO_ERROR;
+	return SF_SQLITE_CODES::ERRORS::NO_ERROR;
 }
 
 }
@@ -86,7 +86,7 @@ SF_Sqlite::SF_Sqlite( const SF_Sqlite& copy)
     
 }
 
-const SF_CODES::ERRORS SF_Sqlite::connect()
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::connect()
 {
     if (!this->isExernalConnection)
     {
@@ -95,9 +95,9 @@ const SF_CODES::ERRORS SF_Sqlite::connect()
 
         int nativeError = sqlite3_open(this->databaseName.c_str(), &this->connection);
 
-        SF_CODES::ERRORS sf_error = SF_SQLITE_PROCESS_SQLITE_NATIVE_ERROR(nativeError);
+        SF_SQLITE_CODES::ERRORS sf_error = SF_SQLITE_PROCESS_SQLITE_NATIVE_ERROR(nativeError);
         
-        if (sf_error == SF_CODES::ERRORS::CANTOPEN)
+        if (sf_error == SF_SQLITE_CODES::ERRORS::CANTOPEN)
         {
             printf("Database failed to open \n");
         }
@@ -105,10 +105,10 @@ const SF_CODES::ERRORS SF_Sqlite::connect()
         return sf_error;
     }
     
-	return SF_CODES::ERRORS::NO_ERROR;
+	return SF_SQLITE_CODES::ERRORS::NO_ERROR;
 }
 
-const SF_CODES::ERRORS SF_Sqlite::disconnect()
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::disconnect()
 {
     if (!this->isExernalConnection)
     {
@@ -122,7 +122,7 @@ const SF_CODES::ERRORS SF_Sqlite::disconnect()
         return SF_SQLITE_PROCESS_SQLITE_NATIVE_ERROR(error);
     }
     
-    return SF_CODES::ERRORS::NO_ERROR;
+    return SF_SQLITE_CODES::ERRORS::NO_ERROR;
 }
 
 static int callback(void *data, int argc, char **argv, char **ColumnNames)
@@ -142,11 +142,7 @@ static int callback(void *data, int argc, char **argv, char **ColumnNames)
 		SF_Sqlite_Row row;
 		for (int x = 0; x < argc; ++x)
 		{
-			SF_Sqlite_Cell cell;
-			cell.columnName = ColumnNames[x];
-			cell.data = argv[x];
-
-			row.columns.push_back(cell);
+            row[ColumnNames[x]] = argv[x];
 		}
 
 		rows->push_back(row);
@@ -159,7 +155,7 @@ static int callback(void *data, int argc, char **argv, char **ColumnNames)
 	return 0;
 }
 
-const SF_CODES::ERRORS SF_Sqlite::execute(const std::string& query, std::list<SF_Sqlite_Row>& result) const
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::execute(const std::string& query, SF_Sqlite_Result& result) const
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
@@ -177,9 +173,9 @@ const SF_CODES::ERRORS SF_Sqlite::execute(const std::string& query, std::list<SF
 	return SF_SQLITE_PROCESS_SQLITE_NATIVE_ERROR(nativeError);
 }
 
-const SF_CODES::ERRORS SF_Sqlite::execute(const std::string& query,
-										 const std::vector<SF_Sqlite_Parameter>& params,
-										 std::list<SF_Sqlite_Row>& result) const
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::execute(const std::string& query,
+                                                 const std::vector<SF_Sqlite_Parameter>& params,
+                                                 SF_Sqlite_Result& result) const
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
@@ -189,7 +185,7 @@ const SF_CODES::ERRORS SF_Sqlite::execute(const std::string& query,
 	return this->execute(finalQuery, result);
 }
 
-const SF_CODES::ERRORS SF_Sqlite::execute(const std::string& query) const
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::execute(const std::string& query) const
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
@@ -203,28 +199,28 @@ const SF_CODES::ERRORS SF_Sqlite::execute(const std::string& query) const
 }
 
 
-const SF_CODES::ERRORS SF_Sqlite::executeScalar(const std::string& query, int& result) const
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::executeScalar(const std::string& query, int& result) const
 {
 	char* resultReturn = 0;
-	SF_CODES::ERRORS error = INTERNAL::executeScalar(this->connection, query, &resultReturn);
+	SF_SQLITE_CODES::ERRORS error = INTERNAL::executeScalar(this->connection, query, &resultReturn);
 	result = (int)*resultReturn - '0';
 	return error;
 }
 
-const SF_CODES::ERRORS SF_Sqlite::executeScalar(const std::string& query, char& result) const
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::executeScalar(const std::string& query, char& result) const
 {
 	char* resultReturn = 0;
-	SF_CODES::ERRORS error = INTERNAL::executeScalar(this->connection, query, &resultReturn);
+	SF_SQLITE_CODES::ERRORS error = INTERNAL::executeScalar(this->connection, query, &resultReturn);
 	result = (char)*resultReturn;
 	return error;
 }
 
-const SF_CODES::ERRORS SF_Sqlite::executeCount(const std::string& query, int& result)
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::executeCount(const std::string& query, int& result)
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
-	std::list<SF_Sqlite_Row> returnResults;
-	SF_CODES::ERRORS error = this->execute(query, returnResults);
+	SF_Sqlite_Result returnResults;
+	SF_SQLITE_CODES::ERRORS error = this->execute(query, returnResults);
 
 	if (SF_SQLITE_SUCCESS(error))
 	{
@@ -234,7 +230,7 @@ const SF_CODES::ERRORS SF_Sqlite::executeCount(const std::string& query, int& re
 	return error;
 }
 
-const SF_CODES::ERRORS SF_Sqlite::insertRecord(const std::string& table, const std::vector<std::string>& values) const
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::insertRecord(const std::string& table, const std::vector<std::string>& values) const
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
@@ -253,7 +249,7 @@ const SF_CODES::ERRORS SF_Sqlite::insertRecord(const std::string& table, const s
 	return this->execute(query);
 }
 
-const SF_CODES::ERRORS SF_Sqlite::insertRecord(const std::string& table, const std::vector<SF_Sqlite_Column_Data_Pair>& values) const
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::insertRecord(const std::string& table, const std::vector<SF_Sqlite_Column_Data_Pair>& values) const
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
@@ -270,8 +266,8 @@ const SF_CODES::ERRORS SF_Sqlite::insertRecord(const std::string& table, const s
 	return this->execute(query);
 }
 
-const SF_CODES::ERRORS SF_Sqlite::getRecords(const std::string& table,
-											std::list<SF_Sqlite_Row>& result) const
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::getRecords(const std::string& table,
+                                                    SF_Sqlite_Result& result) const
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
@@ -286,9 +282,9 @@ const SF_CODES::ERRORS SF_Sqlite::getRecords(const std::string& table,
 	return this->execute(query, result);
 }
 
-const SF_CODES::ERRORS SF_Sqlite::getRecords(const std::string& table,
-											const std::vector<std::string>& columns,
-											std::list<SF_Sqlite_Row>& result) const
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::getRecords(const std::string& table,
+                                                    const std::vector<std::string>& columns,
+                                                    SF_Sqlite_Result& result) const
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
@@ -302,10 +298,10 @@ const SF_CODES::ERRORS SF_Sqlite::getRecords(const std::string& table,
 
 }
 
-const SF_CODES::ERRORS SF_Sqlite::getRecords(const std::string& table,
-											const std::vector<std::string>& columns,
-											const std::vector<SF_Sqlite_Column_Data_Pair>& whereValues,
-											std::list<SF_Sqlite_Row>& result) const
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::getRecords(const std::string& table,
+                                                    const std::vector<std::string>& columns,
+                                                    const std::vector<SF_Sqlite_Column_Data_Pair>& whereValues,
+                                                    SF_Sqlite_Result& result) const
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
@@ -321,7 +317,7 @@ const SF_CODES::ERRORS SF_Sqlite::getRecords(const std::string& table,
 	return this->execute(query, result);
 }
 
-const SF_CODES::ERRORS SF_Sqlite::dropTable(const std::string& table) const
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::dropTable(const std::string& table) const
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
@@ -331,8 +327,8 @@ const SF_CODES::ERRORS SF_Sqlite::dropTable(const std::string& table) const
 	return this->execute(query);
 }
 
-const SF_CODES::ERRORS SF_Sqlite::createTable(const std::string& name,
-											const std::vector<SF_Sqlite_Column_Type_Pair>& columns) const
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::createTable(const std::string& name,
+                                                     const std::vector<SF_Sqlite_Column_Type_Pair>& columns) const
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
@@ -349,12 +345,12 @@ const SF_CODES::ERRORS SF_Sqlite::createTable(const std::string& name,
 	return this->execute(query);
 }
 
-const SF_CODES::ERRORS SF_Sqlite::tableExists(const std::string& table, SF_Bool& result) const
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::tableExists(const std::string& table, SF_Bool& result) const
 {
 	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
 	int returnValue;
-	SF_CODES::ERRORS error = this->executeScalar("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='" + table + "';", returnValue);
+	SF_SQLITE_CODES::ERRORS error = this->executeScalar("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='" + table + "';", returnValue);
 	
 	if (SF_SQLITE_SUCCESS(error))
 	{

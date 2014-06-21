@@ -4,7 +4,7 @@
 #include <string>
 #include <list>
 
-namespace SF_CODES
+namespace SF_SQLITE_CODES
 {
     //0-28 are native Sqlite errors. They were presented as macros, but I have wrapped them into an enum.
     //1000+ are SF_Sqlite errors
@@ -46,7 +46,15 @@ namespace SF_CODES
         ALREADY_CONNECTED=1001,
         QUERY_FAIL = 1002,
     };
+};
 
+namespace SF_COLLECTION_CODES
+{
+    enum ERRORS
+    {
+        NO_ERROR = 0,
+        ITEM_NOT_FOUND = 1
+    };
 };
 
 namespace SF_COLUMN_FLAGS
@@ -115,10 +123,11 @@ struct SF_Sqlite_Cell
 	std::string data;
 };
 
+/*
 struct SF_Sqlite_Row
 {
 	std::list<SF_Sqlite_Cell> columns;
-};
+};*/
 
 
 #endif
