@@ -49,6 +49,7 @@ static const SF_CODES::ERRORS executeScalar(sqlite3* connection, const std::stri
 	execution.pointer = &holder;
 
 	char* error = 0;
+    
 	sqlite3_exec(connection, query.c_str(), callback, &execution, &error);
 	*result = execution.pointer;
 
@@ -68,40 +69,60 @@ static const SF_CODES::ERRORS executeScalar(sqlite3* connection, const std::stri
 //cause issues in the constructor. Never run code which can
 //throw exeptions or cause errors in the constructors
 SF_Sqlite::SF_Sqlite( const std::string & name)
-	: connection(0), databaseName(name)
+	: connection(0), databaseName(name), isExernalConnection(false)
 {
 
 }
 
+SF_Sqlite::SF_Sqlite( sqlite3* externalConnection )
+    : connection(externalConnection), databaseName("EXTERNAL CONNECTION"), isExernalConnection(true)
+{
+    
+}
+
 SF_Sqlite::SF_Sqlite( const SF_Sqlite& copy)
-    : connection(copy.connection), databaseName(copy.databaseName)
+    : connection(copy.connection), databaseName(copy.databaseName), isExernalConnection(copy.isExernalConnection)
 {
     
 }
 
 const SF_CODES::ERRORS SF_Sqlite::connect()
 {
-	SF_SQLITE_IS_CONNECTED_ESCAPE(connection);
-
-	int nativeError = sqlite3_open(this->databaseName.c_str(), &this->connection);
-
-    SF_CODES::ERRORS sf_error = SF_SQLITE_PROCESS_SQLITE_NATIVE_ERROR(nativeError);
-    
-    if (sf_error == SF_CODES::ERRORS::CANTOPEN)
+    if (!this->isExernalConnection)
     {
-        printf("Database failed to open \n");
+    
+        SF_SQLITE_IS_CONNECTED_ESCAPE(connection);
+
+        int nativeError = sqlite3_open(this->databaseName.c_str(), &this->connection);
+
+        SF_CODES::ERRORS sf_error = SF_SQLITE_PROCESS_SQLITE_NATIVE_ERROR(nativeError);
+        
+        if (sf_error == SF_CODES::ERRORS::CANTOPEN)
+        {
+            printf("Database failed to open \n");
+        }
+        
+        return sf_error;
     }
     
-	return sf_error;
+	return SF_CODES::ERRORS::NO_ERROR;
 }
 
 const SF_CODES::ERRORS SF_Sqlite::disconnect()
 {
-	SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
+    if (!this->isExernalConnection)
+    {
+    
+        SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
 
-	int error = sqlite3_close(this->connection);
+        int error = sqlite3_close(this->connection);
+        
+        this->connection = 0;
 
-	return SF_SQLITE_PROCESS_SQLITE_NATIVE_ERROR(error);
+        return SF_SQLITE_PROCESS_SQLITE_NATIVE_ERROR(error);
+    }
+    
+    return SF_CODES::ERRORS::NO_ERROR;
 }
 
 static int callback(void *data, int argc, char **argv, char **ColumnNames)
@@ -343,10 +364,29 @@ const SF_CODES::ERRORS SF_Sqlite::tableExists(const std::string& table, SF_Bool&
 	return error;
 }
 
+SF_Sqlite& SF_Sqlite::operator=(const SF_Sqlite& other)
+{
+    this->connection = other.connection;
+    this->isExernalConnection = other.isExernalConnection;
+    this->databaseName = other.databaseName;
+    
+    return *this;
+}
+
 SF_Sqlite::~SF_Sqlite()
 {
+    /*
 	if (connection)
 	{
 		this->disconnect();
-	}
+	}*/
+    
+    if (connection)
+    {
+#if DEBUG_SQLITE
+      
+        printf("SF_Sqlite being destroyed but the connection is not closed. SF_Sqlite will not close the connection for you. Please call .disconnect() on this object before  \n");
+        
+#endif
+    }
 }

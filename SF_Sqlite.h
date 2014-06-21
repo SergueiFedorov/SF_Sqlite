@@ -19,11 +19,19 @@ class SF_Sqlite
 private:
 	sqlite3* connection;
 	std::string databaseName;
-
-public:
     
+    //If this is true, the connection is not automatically disconnected on destruction or when "disconnect" is called.
+    //The connection is not orignally owned by this object, and so it is not it's reponsibility to handle
+    bool isExernalConnection;
+    
+public:
+
 	//DOES: Saves the name of the database. Does not automatically open a connection to the database.
 	SF_Sqlite( const std::string& dbName );
+    
+    //DOES: Assumes the connection is not owned by this object.
+    //WARNING: This object will not close this connection as it does not own it. You are responsble for this.
+    SF_Sqlite( sqlite3* externalConnection );
     SF_Sqlite( const SF_Sqlite& copy);
 
 	//DOES: Connects to the datase. Constructor does not open a connection to the database.
@@ -108,15 +116,18 @@ public:
 	//ERRORS: NOT_CONNECTED, QUERY_FAIL
 	//OUTPUT QUERY: SELECT ID, Name FROM Example where Name = 'Serguei Fedorov'
 	const SF_CODES::ERRORS getRecords(const std::string& table,
-									 const std::vector<std::string>& columns,
-									 const std::vector<SF_Sqlite_Column_Data_Pair>& whereValues,
-									 std::list<SF_Sqlite_Row>& result) const;
+									  const std::vector<std::string>& columns,
+									  const std::vector<SF_Sqlite_Column_Data_Pair>& whereValues,
+									  std::list<SF_Sqlite_Row>& result) const;
 
 	//DOES: Returns a bool for whether or not a table exists
 	//ERRORS: NOT_CONNECTED, QUERY_FAIL
 	//OUTPUT QUERY: SELECT count(*) FROM sqlite_master WHERE type='table' AND name='Example'
 	const SF_CODES::ERRORS tableExists(const std::string& table, SF_Bool& result) const;
-
+    
+     SF_Sqlite& operator=(const SF_Sqlite& other);
+    
+    
 	~SF_Sqlite();
 };
 
