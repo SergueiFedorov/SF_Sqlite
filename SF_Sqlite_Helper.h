@@ -4,11 +4,9 @@
 #include "sqlite3.h"
 #include "SF_Sqlite_Structures.h"
 
-//#include <stdio.h>
 #include <string>
 #include <list>
 #include <vector>
-//#include <assert.h>
 
 void sf_sqlite_buildColumnType(std::string& output, const std::string& column, const std::string& type);
 void sf_sqlite_buildColumnDataPairStrings(std::string& nameOutput, std::string& columnOutput, const std::vector<SF_Sqlite_Column_Data_Pair>& values);
