@@ -26,6 +26,8 @@ void sf_sqlite_buildInsertIntoTableHeader(std::string& output, const std::string
 void sf_sqlite_buildInsertValues(std::string& output, const std::vector<std::string>& values);
 void sf_sqlite_buildInsertValues(std::string& ouput, const std::vector<SF_Sqlite_Column_Data_Pair>& values);
 void sf_sqlite_buildParamedQuery(std::string& output, const std::string& paramedString, const std::vector<SF_Sqlite_Parameter>& params);
+void sf_sqlite_buildSetValues(std::string& output, const std::vector<SF_Sqlite_Column_Data_Pair>& values);
+void sf_sqlite_buildFinalUpdateQuery(std::string& output, const std::string& table, const std::string& where, const std::string& set);
 
 namespace SF_SQLITE_QUERY_STRINGS
 {
@@ -38,6 +40,7 @@ namespace SF_SQLITE_QUERY_STRINGS
 	const std::string PRIMARY_KEY(" PRIMARY KEY ");
 	const std::string INSERT_INTO(" INSERT INTO ");
 	const std::string VALUES(" VALUES ");
+    const std::string UPDATE(" UPDATE ");
 }
 
 

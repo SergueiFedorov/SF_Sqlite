@@ -105,16 +105,60 @@ struct SF_Sqlite_Column_Data_Pair
 	SF_Sqlite_Column_Data_Pair() { }
     
     SF_Sqlite_Column_Data_Pair(const std::string& column, const bool& data)
-        : columnName(column), columnData(std::string(1, '0' + (data == true ? (char)1 : (char)0) ))
+        : columnName(column), columnData(std::to_string('0' + (data == true ? (char)1 : (char)0) ))
+    {
+        
+    }
+    
+    SF_Sqlite_Column_Data_Pair(const std::string& column, const int& data)
+        : columnName(column), columnData(std::to_string(data))
+    {
+        
+    }
+    
+    SF_Sqlite_Column_Data_Pair(const std::string& column, const float& data)
+        : columnName(column), columnData(std::to_string(data))
+    {
+        
+    }
+    
+    SF_Sqlite_Column_Data_Pair(const std::string& column, const double& data)
+    : columnName(column), columnData(std::to_string(data))
+    {
+        
+    }
+    
+    SF_Sqlite_Column_Data_Pair(const std::string& column, const long& data)
+    : columnName(column), columnData(std::to_string(data))
+    {
+        
+    }
+    
+    SF_Sqlite_Column_Data_Pair(const std::string& column, const long long& data)
+    : columnName(column), columnData(std::to_string(data))
+    {
+        
+    }
+    
+    SF_Sqlite_Column_Data_Pair(const std::string& column, const unsigned long& data)
+    : columnName(column), columnData(std::to_string(data))
+    {
+        
+    }
+    
+    SF_Sqlite_Column_Data_Pair(const std::string& column, const unsigned long long& data)
+    : columnName(column), columnData(std::to_string(data))
     {
         
     }
     
 	SF_Sqlite_Column_Data_Pair(const std::string& column, const std::string& data)
-		: columnName(column), columnData(data)
+		: columnName(column), columnData("'" + data + "'")
 	{
 
 	}
+    
+    
 };
 
 struct SF_Sqlite_Cell

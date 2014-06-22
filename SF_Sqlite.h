@@ -116,10 +116,14 @@ public:
 	//ERRORS: NOT_CONNECTED, QUERY_FAIL
 	//OUTPUT QUERY: SELECT ID, Name FROM Example where Name = 'Serguei Fedorov'
 	const SF_SQLITE_CODES::ERRORS getRecords(const std::string& table,
-									  const std::vector<std::string>& columns,
-									  const std::vector<SF_Sqlite_Column_Data_Pair>& whereValues,
-									  SF_Sqlite_Result& result) const;
+                                             const std::vector<std::string>& columns,
+                                             const std::vector<SF_Sqlite_Column_Data_Pair>& whereValues,
+                                             SF_Sqlite_Result& result) const;
 
+    const SF_SQLITE_CODES::ERRORS updateRecord(const std::string& table,
+                                              const std::vector<SF_Sqlite_Column_Data_Pair> setValues,
+                                              const std::vector<SF_Sqlite_Column_Data_Pair> whereValues) const;
+    
 	//DOES: Returns a bool for whether or not a table exists
 	//ERRORS: NOT_CONNECTED, QUERY_FAIL
 	//OUTPUT QUERY: SELECT count(*) FROM sqlite_master WHERE type='table' AND name='Example'

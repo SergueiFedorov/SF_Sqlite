@@ -90,7 +90,6 @@ const SF_SQLITE_CODES::ERRORS SF_Sqlite::connect()
 {
     if (!this->isExernalConnection)
     {
-    
         SF_SQLITE_IS_CONNECTED_ESCAPE(connection);
 
         int nativeError = sqlite3_open(this->databaseName.c_str(), &this->connection);
@@ -315,6 +314,24 @@ const SF_SQLITE_CODES::ERRORS SF_Sqlite::getRecords(const std::string& table,
 	sf_sqlite_buildFinalSelectAllQuery(query, table, selectListString, whereListString);
 
 	return this->execute(query, result);
+}
+
+const SF_SQLITE_CODES::ERRORS SF_Sqlite::updateRecord(const std::string& table,
+                                                      const std::vector<SF_Sqlite_Column_Data_Pair> setValues,
+                                                      const std::vector<SF_Sqlite_Column_Data_Pair> whereValues) const
+{
+    SF_SQLITE_IS_NOT_CONNECTED_ESCAPE(connection);
+
+    std::string whereListString;
+    sf_sqlite_buildWhereColumnList(whereListString, whereValues);
+    
+    std::string setListString;
+    sf_sqlite_buildSetValues(setListString, setValues);
+    
+    std::string query;
+    sf_sqlite_buildFinalUpdateQuery(query, table, whereListString, setListString);
+    
+    return this->execute(query);
 }
 
 const SF_SQLITE_CODES::ERRORS SF_Sqlite::dropTable(const std::string& table) const

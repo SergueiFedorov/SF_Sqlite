@@ -69,6 +69,14 @@ void sf_sqlite_buildFinalSelectAllQuery(std::string& output,
 	output += SF_SQLITE_QUERY_STRINGS::SELECT + selectColumns + table +  whereValues;
 }
 
+void sf_sqlite_buildFinalUpdateQuery(std::string& output,
+                                     const std::string& table,
+                                     const std::string& where,
+                                     const std::string& set)
+{
+    output += SF_SQLITE_QUERY_STRINGS::UPDATE + table + set + where;
+}
+
 void sf_sqlite_buildWhereColumnList(std::string& output, const std::vector<SF_Sqlite_Column_Data_Pair>& whereValues)
 {
 	if (whereValues.size() > 0)
@@ -160,6 +168,12 @@ void sf_sqlite_buildInsertValues(std::string& ouput, const std::vector<SF_Sqlite
     
 	ouput += nameString;
 	ouput += columnString;
+}
+
+void sf_sqlite_buildSetValues(std::string& output, const std::vector<SF_Sqlite_Column_Data_Pair>& values)
+{
+    output += " SET ";
+    sf_sqlite_buildEqualsCommaList(output, values);
 }
 
 void sf_sqlite_buildParamedQuery(std::string& output, const std::string& paramedString, const std::vector<SF_Sqlite_Parameter>& params)
