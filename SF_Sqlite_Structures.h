@@ -105,7 +105,7 @@ struct SF_Sqlite_Column_Data_Pair
 	SF_Sqlite_Column_Data_Pair() { }
     
     SF_Sqlite_Column_Data_Pair(const std::string& column, const bool& data)
-        : columnName(column), columnData(std::to_string('0' + (data == true ? (char)1 : (char)0) ))
+        : columnName(column), columnData((data == true ? "1" : "0" ))
     {
         
     }
