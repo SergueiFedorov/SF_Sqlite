@@ -357,6 +357,7 @@ const SF_SQLITE_CODES::ERRORS SF_Sqlite::createTable(const std::string& name,
 
 	std::string query;
 	query += createString;
+    
 	query += columnString;
 
 	return this->execute(query);

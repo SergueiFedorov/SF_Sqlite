@@ -66,7 +66,7 @@ void sf_sqlite_buildFinalSelectAllQuery(std::string& output,
                                         const std::string& selectColumns,
                                         const std::string& whereValues)
 {
-	output += SF_SQLITE_QUERY_STRINGS::SELECT + selectColumns + table +  whereValues;
+	output += SF_SQLITE_QUERY_STRINGS::SELECT + selectColumns + " FROM " + table +  whereValues;
 }
 
 void sf_sqlite_buildFinalUpdateQuery(std::string& output,
@@ -128,6 +128,11 @@ void sf_sqlite_buildCreateTableColumns(std::string& output, std::vector<SF_Sqlit
 			output += SF_SQLITE_QUERY_STRINGS::AUTOINCREMENT;
 		}
         
+        if (((*iterator).columnFlags & SF_COLUMN_FLAGS::UNIQUE) > 0)
+        {
+            output += SF_SQLITE_QUERY_STRINGS::UNIQUE;
+        }
+        
 		output += std::string(",");
 	}
     
@@ -139,7 +144,7 @@ void sf_sqlite_buildCreateTableColumns(std::string& output, std::vector<SF_Sqlit
 void sf_sqlite_buildCreateTable(std::string& output, const std::string& table)
 {
 	
-	output += SF_SQLITE_QUERY_STRINGS::CREATE_TABLE;
+	output += SF_SQLITE_QUERY_STRINGS::CREATE_TABLE + " IF NOT EXISTS ";
 	output += table;
 }
 

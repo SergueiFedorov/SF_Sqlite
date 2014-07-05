@@ -41,6 +41,7 @@ namespace SF_SQLITE_QUERY_STRINGS
 	const std::string INSERT_INTO(" INSERT INTO ");
 	const std::string VALUES(" VALUES ");
     const std::string UPDATE(" UPDATE ");
+    const std::string UNIQUE(" UNIQUE ");
 }
 
 
